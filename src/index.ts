@@ -5,31 +5,40 @@ import { AIRPORTS } from "./airports";
 
 type LatLng = [number, number];
 
-const from: LatLng = [AIRPORTS["SKRG"].lat, AIRPORTS["SKRG"].lon];
-const to: LatLng = [AIRPORTS["KLGA"].lat, AIRPORTS["KLGA"].lon];
+//const from: LatLng = [AIRPORTS["SKRG"].lat, AIRPORTS["SKRG"].lon];
+//const to: LatLng = [AIRPORTS["KLGA"].lat, AIRPORTS["KLGA"].lon];
+
+let smallMap = L.map("map", {
+  zoom: 5,
+  zoomControl: false,
+});
+smallMap.addEventListener("click", (e) => {
+  hideSmallShowLarge();
+});
+let smallMapElement = document.getElementById("map") as HTMLDivElement;
+
+function clearMaps() {}
 
 function loadSmallMap(location: LatLng) {
-  var map1 = L.map("map", {
-    zoom: 5,
-    zoomControl: false,
-  }).setView(location);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19,
     attribution:
       '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map1);
+  }).addTo(smallMap);
 
-  map1.addEventListener("click", (e) => {
-    hideSmallShowLarge();
-  });
+  smallMap.setView(location);
 
-  L.marker(location).addTo(map1);
+  L.marker(location).addTo(smallMap);
+
+  smallMapElement.style.display = "block";
+
+  //smallMap.remove
 }
 
 function hideSmallShowLarge() {
-  (document.getElementById("map") as HTMLDivElement).style.display = "none";
+  smallMapElement.style.display = "none";
   (document.getElementById("map2") as HTMLDivElement).style.display = "block";
-  showLargerMap(from, to);
+  //showLargerMap(from, to);
 }
 
 function showLargerMap(from: LatLng, to: LatLng) {
@@ -74,4 +83,27 @@ function showLargerMap(from: LatLng, to: LatLng) {
   }).addTo(map2);
 }
 
-loadSmallMap(to);
+const form = document.getElementById("flightForm") as HTMLFormElement;
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+
+  clearMaps();
+
+  const formData = new FormData(form);
+  const from = formData.get("from") as string;
+  const to = formData.get("to") as string;
+  const date = formData.get("date") as string;
+  const adults = formData.get("adults") as string;
+
+  console.log(from, to, date, adults);
+
+  if (!AIRPORTS[to]) {
+    alert("Invalid destination");
+    return;
+  }
+
+  loadSmallMap([AIRPORTS[to].lat, AIRPORTS[to].lon]);
+});
+
+//http://localhost:9000/flights?from=MED&to=JFK&date=2024-10-21&adults=2
